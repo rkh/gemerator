@@ -110,6 +110,27 @@ rack-foo/
 <p>Per default, <tt>rack-foo.gemspec</tt> will automatically depend on <tt>rack</tt> and
 <tt>lib/rack/foo.rb</tt> will require <tt>rack</tt>.</p>
 
+<h2>Why not <code>bundle gem</code>?</h2>
+
+<p><code>bundle gem</code> is fine, but just too little boilerplate, here is what is
+different:</p>
+
+<ul>
+<li>
+<code>rake test</code> is ready to go</li>
+<li>gemspec does not include shell-outs, file list is not generic (this is a
+feature!)</li>
+<li>Less TODOs all over the place you have to remove</li>
+<li>No rubbish in the .gitignore</li>
+<li>Includes rake task to update files/authors/e-mails from git and version from
+lib (similar to what Sinatra/Tilt/sinatra-contrib and so on do)</li>
+<li>internally, the version is not a string to avoid alphanumerical comparison
+(similar to what Rails does)</li>
+<li>you can do <code>QUICK=1 bundle install</code> to avoid fetching from rubyforge</li>
+
+</ul><p>Apart from that, it's pretty much the same. Oh, wait, and it works without
+bundler.</p>
+
     <div class="footer">
       get the source code on GitHub : <a href="http://github.com/rkh/gemerator">rkh/gemerator</a>
     </div>
