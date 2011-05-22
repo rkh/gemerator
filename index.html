@@ -116,18 +116,19 @@ rack-foo/
 different:</p>
 
 <ul>
-<li>
-<code>rake test</code> is ready to go</li>
-<li>gemspec does not include shell-outs, file list is not generic (this is a
+<li>A <code>rake test</code> is ready to go.</li>
+<li>The gemspec does not include shell-outs, file list is not generic (this is a
 feature!)</li>
 <li>Less TODOs all over the place you have to remove</li>
-<li>No rubbish in the .gitignore</li>
+<li>No rubbish in the <code>.gitignore</code>
+</li>
 <li>Includes rake task to update files/authors/e-mails from git and version from
 lib (similar to what Sinatra/Tilt/sinatra-contrib and so on do)</li>
-<li>internally, the version is not a string to avoid alphanumerical comparison
+<li>Internally, the version is not a string to avoid alphanumerical comparison
 (similar to what Rails does)</li>
-<li>you can do <code>QUICK=1 bundle install</code> to avoid fetching from rubyforge</li>
-
+<li>You can do <code>QUICK=1 bundle install</code> to avoid fetching from RubyForge</li>
+<li>Some logic to generate better boilerplate for extensions (Rack middleware,
+Sinatra extensions, ...) has been added.</li>
 </ul><p>Apart from that, it's pretty much the same. Oh, wait, and it works without
 bundler.</p>
 
