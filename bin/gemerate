@@ -1,0 +1,234 @@
+#!/usr/bin/env ruby
+require 'backports'
+require 'fileutils'
+
+if ARGV.count != 1
+  $stderr.puts "Usage: #{$0} GEM_NAME"
+  exit 1
+end
+
+name    = ARGV.first.gsub('-', '/').underscore
+folder  = name.gsub '/', '-'
+files   = DATA.read.scan /\[(\S+)\]\n((?:(?!\n\[\S+\]).)*)/m
+user    = `git config github.user || echo GITHUB_USER`.strip
+author  = `git config user.name || echo Unknown`.strip
+ipolate = proc do |str|
+  str.gsub("%Lib::Name%", name.camelize).gsub("%lib/name%", name).
+    gsub("%lib_name%", name.gsub('/', '_')).gsub("%GITHUB_USER%", user).
+    gsub("%lib-name%", folder).gsub("%LIB_NAME%", name.upcase).
+    gsub(/(.*)%lib%(.*\n)/) { "#$1%s#$2" % name[/^[^\/]+/] if name['/'] }.
+    gsub("%Author Name%", author).gsub("%year%", Time.now.year.to_s).
+    gsub(/%mod%\n(.*\n)?%mod%/m) do
+      lines = $1.to_s.split "\n"
+      lines.map! { |l| "  " * name.count('/') + l }
+      pre, post = "", ""
+      name.camelize.split('::').each_with_index do |nested, index|
+        indent    = "  " * index
+        post, pre = "\n#{post}", "#{pre}\n" unless pre.empty?
+        post, pre = "#{indent}end#{post}", "#{pre}#{indent}module #{nested}"
+      end
+      [pre, *lines, post].join "\n"
+    end
+end
+
+files.each do |file, content|
+  file = File.join(folder, ipolate[file])
+  next if File.exist? file
+  FileUtils::Verbose.mkdir_p File.dirname(file)
+  $stderr.puts "touch #{file}"
+  File.open(file, 'w') { |f| f << ipolate[content] }
+end
+
+Dir.chdir(folder) do
+  system "git init && git add . && git commit -m 'initial commit'"
+  system "ruby -S rake gemspec"
+  system "git commit -a -m 'initial commit' --amend"
+end
+
+__END__
+
+[%lib-name%.gemspec]
+# Run `rake %lib-name%.gemspec` to update the gemspec.
+Gem::Specification.new do |s|
+  # general infos
+  s.name        = "%lib-name%"
+  s.version     = "0.0.1"
+  s.description = "No Description Yet"
+  s.homepage    = "http://github.com/%GITHUB_USER%/%lib-name%"
+  s.summary     = s.description
+
+  # generated from git shortlog -sn
+  s.authors = [
+  ]
+
+  # generated from git shortlog -sne
+  s.email = [
+  ]
+
+  # generated from git ls-files
+  s.files = [
+  ]
+
+  # dependencies
+  s.add_dependency "%lib%"
+  s.add_development_dependency "rspec", "~> 2.0"
+end
+
+[Rakefile]
+$LOAD_PATH.unshift File.expand_path('../lib', __FILE__)
+
+begin
+  require 'bundler'
+  Bundler::GemHelper.install_tasks
+rescue LoadError => e
+  $stderr.puts e
+end
+
+desc "run specs"
+task(:spec) { ruby '-S rspec spec' }
+
+desc "generate gemspec"
+task '%lib-name%.gemspec' do
+  require '%lib/name%/version'
+  content = File.read '%lib-name%.gemspec'
+
+  fields = {
+    :authors => `git shortlog -sn`.scan(/[^\d\s].*/),
+    :email   => `git shortlog -sne`.scan(/[^<]+@[^>]+/),
+    :files   => `git ls-files`.split("\n").reject { |f| f =~ /^(\.|Gemfile)/ }
+  }
+
+  fields.each do |field, values|
+    updated = "  s.#{field} = ["
+    updated << values.map { |v| "\n    %p" % v }.join(',')
+    updated << "\n  ]"
+    content.sub!(/  s\.#{field} = \[\n(    .*\n)*  \]/, updated)
+  end
+
+  content.sub! /(s\.version.*=\s+).*/, "\\1\"#{%Lib::Name%::VERSION}\""
+  File.open('%lib-name%.gemspec', 'w') { |f| f << content }
+end
+
+task :gemspec => '%lib-name%.gemspec'
+task :default => :spec
+task :test    => :spec
+
+[Gemfile]
+source "http://rubygems.org" unless ENV['QUICK']
+gemspec
+
+[License]
+Copyright (c) %year% %Author Name%
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+'Software'), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+[README.md]
+I have no clue what this library does.
+
+# Pro Tip
+
+To not have too many boilerplate commits (so you avoid ppl from thinking "WTF?
+Why did he/she start with rspec but instantly switched to minitest, and what's
+all that nonsense in the readme?") use `git commit --amend` to make changes in
+the initial commit rather than creating new commits. Just saying.
+
+# Usage
+
+``` ruby
+require '%lib/name%'
+fail("Dunno how to use %p" % %Lib::Name%)
+```
+
+# Installation
+
+    gem install %lib-name%
+
+# TODO
+
+* Write code and documentation
+* Fix project description in gemspec
+* Change testing framework if necessary (see Rakefile, currently RSpec)
+* Adjust %lib-name%.gemspec if your github name is not %GITHUB_USER%
+* Adjust License if your real name is not %Author Name%
+
+[.gitignore]
+# please add general patterns to your global ignore list
+# see https://github.com/github/gitignore#readme
+
+[lib/%lib/name%.rb]
+require '%lib/name%/version'
+require '%lib%'
+
+%mod%
+%mod%
+
+[lib/%lib-name%.rb]
+require "%lib/name%"
+
+[spec/%lib_name%_spec.rb]
+require '%lib/name%'
+
+describe %Lib::Name% do
+  it "should behave"
+end
+
+[lib/%lib/name%/version.rb]
+%mod%
+  def self.version
+    VERSION
+  end
+
+  module VERSION
+    extend Comparable
+
+    MAJOR     = 0
+    MINOR     = 0
+    TINY      = 1
+    SIGNATURE = [MAJOR, MINOR, TINY]
+    STRING    = SIGNATURE.join '.'
+
+    def self.major; MAJOR  end
+    def self.minor; MINOR  end
+    def self.tiny;  TINY   end
+    def self.to_s;  STRING end
+
+    def self.hash
+      STRING.hash
+    end
+
+    def self.<=>(other)
+      other = other.split('.').map { |i| i.to_i } if other.respond_to? :split
+      SIGNATURE <=> Array(other)
+    end
+
+    def self.inspect
+      STRING.inspect
+    end
+
+    def self.respond_to?(meth, *)
+      meth.to_s !~ /^__|^to_str$/ and STRING.respond_to? meth unless super
+    end
+
+    def self.method_missing(meth, *args, &block)
+      return super unless STRING.respond_to?(meth)
+      STRING.send(meth, *args, &block)
+    end
+  end
+%mod%
