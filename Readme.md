@@ -73,6 +73,8 @@ different:
 * Internally, the version is not a string to avoid alphanumerical comparison
   (similar to what Rails does)
 * You can do `QUICK=1 bundle install` to avoid fetching from RubyForge
+* Some logic to generate better boilerplate for extensions (Rack middleware,
+  Sinatra extensions, ...) has been added.
 
 Apart from that, it's pretty much the same. Oh, wait, and it works without
 bundler.
