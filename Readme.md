@@ -58,6 +58,25 @@ For an extension:
 Per default, `rack-foo.gemspec` will automatically depend on `rack` and
 `lib/rack/foo.rb` will require `rack`.
 
+# Why not `bundle gem`?
+
+`bundle gem` is fine, but just too little boilerplate, here is what is
+different:
+
+* `rake test` is ready to go
+* gemspec does not include shell-outs, file list is not generic (this is a
+  feature!)
+* Less TODOs all over the place you have to remove
+* No rubbish in the .gitignore
+* Includes rake task to update files/authors/e-mails from git and version from
+  lib (similar to what Sinatra/Tilt/sinatra-contrib and so on do)
+* internally, the version is not a string to avoid alphanumerical comparison
+  (similar to what Rails does)
+* you can do `QUICK=1 bundle install` to avoid fetching from rubyforge
+
+Apart from that, it's pretty much the same. Oh, wait, and it works without
+bundler.
+
 # Installation
 
     gem install gemerator
