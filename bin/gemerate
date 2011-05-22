@@ -9,7 +9,7 @@ end
 
 name    = ARGV.first.gsub('-', '/').underscore
 folder  = name.gsub '/', '-'
-files   = DATA.read.scan /\[(\S+)\]\n((?:(?!\n\[\S+\]).)*)/m
+files   = File.read(__FILE__).scan /\n\[(\S+)\]\n((?:(?!\n\[\S+\]).)*)/m
 user    = `git config github.user || echo GITHUB_USER`.strip
 author  = `git config user.name || echo Unknown`.strip
 ipolate = proc do |str|
