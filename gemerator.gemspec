@@ -7,6 +7,7 @@ Gem::Specification.new do |s|
   s.email       = %w[konstantin.mailinglists@googlemail.com]
   s.files       = %w[Readme.md gemerator.gemspec bin/gemerate]
   s.executables = %w[gemerate]
+  s.add_dependency('backports', '>= 2.2.1')
   s.summary     = <<-SUMMARY
     Like NewGem, but way simpler, leaves no traces, extremely minimal boiler
     plate. Automatically handles extensions for Rack, Yard, Sinatra, etc
