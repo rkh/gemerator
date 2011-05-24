@@ -27,7 +27,7 @@ ipolate = proc do |str|
         post, pre = "\n#{post}", "#{pre}\n" unless pre.empty?
         post, pre = "#{indent}end#{post}", "#{pre}#{indent}module #{nested}"
       end
-      [pre, *lines, post].join "\n"
+      lines.unshift(pre).push(post).join("\n")
     end
 end
 
